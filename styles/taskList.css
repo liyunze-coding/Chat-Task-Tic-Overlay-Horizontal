@@ -146,7 +146,7 @@ body {
 }
 
 #title {
-	font-weight: bold;
+	font-weight: normal;
 	font-size: var(--header-font-size);
 }
 
@@ -179,8 +179,11 @@ body {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	width: 100%;
+	justify-content: center;
+	width: fit-content;
 	z-index: -1;
+	position: absolute;
+	height: inherit;
 
 	/* animation: scroll 10s infinite alternate ease-in-out; */
 }
@@ -203,6 +206,7 @@ body {
 	flex-direction: row;
 
 	align-items: center;
+	justify-content:center;
 
 	font-size: var(--task-font-size);
 	color: var(--task-font-color);
@@ -214,6 +218,8 @@ body {
 	border-radius: var(--task-border-radius);
 
 	padding: var(--task-padding);
+
+	width: fit-content;
 }
 
 .username {
@@ -286,12 +292,9 @@ input[type="checkbox"]:checked + label:after {
 }
 
 .task {
-	max-width: var(--task-max-width);
+	/* max-width: var(--task-max-width); */
 	white-space: nowrap;
-
-	/* ellipses if overflow */
-	overflow: hidden;
-	text-overflow: ellipsis;
+	width: fit-content;
 }
 
 .task-container .blank-task {

@@ -13,6 +13,8 @@ DB structure:
 */
 
 const responses = configs.responses;
+let scrolling = false;
+let primaryAnimation, secondaryAnimation;
 
 function loadGoogleFont(font) {
 	WebFont.load({
@@ -39,13 +41,7 @@ function importStyles() {
 		return !style.includes("Background");
 	});
 
-	const backgroundStyles = [
-		"taskList",
-		"header",
-		"body",
-		"task",
-		"checkBox",
-	];
+	const backgroundStyles = ["taskList", "header", "body", "task", "checkBox"];
 
 	stylesToImport.forEach((style) => {
 		document.documentElement.style.setProperty(
@@ -90,6 +86,7 @@ function resetDB() {
 
 function clearAllTasks() {
 	resetDB();
+	cancelAnimation();
 	renderTaskList();
 }
 
@@ -151,18 +148,22 @@ function renderTaskList() {
 		}
 	}
 
-	let taskList = document.querySelector(".task-container");
-	taskList.innerHTML = "";
+	// reverse the order of tasks
+	if (configs.settings.reverseOrder) {
+		let reversedTasks = {};
+		let tasksKeys = Object.keys(tasks);
+		for (let i = tasksKeys.length - 1; i >= 0; i--) {
+			let task = tasksKeys[i];
+			reversedTasks[task] = tasks[task];
+		}
+		tasks = reversedTasks;
+	}
 
-	// create 2 divs
-	let blankTask1 = document.createElement("div");
-	blankTask1.className = "blank-task";
+	let taskContainers = document.querySelectorAll(".task-container");
 
-	let blankTask2 = document.createElement("div");
-	blankTask2.className = "blank-task";
-
-	// append to task list
-	taskList.appendChild(blankTask1);
+	taskContainers.forEach(function (taskList) {
+		taskList.innerHTML = "";
+	});
 
 	for (let task in tasks) {
 		let taskData = tasks[task];
@@ -176,78 +177,79 @@ function renderTaskList() {
 			taskData.done
 		);
 	}
-	taskList.appendChild(blankTask2);
 
 	renderTaskCount();
 }
 
 // adding task to DOM
 function addTasksToDom(username, userColor, task, completed) {
-	let taskList = document.querySelector(".task-container");
+	let taskContainers = document.querySelectorAll(".task-container");
 
-	let newTask = document.createElement("div");
-	newTask.className = "task-div";
+	taskContainers.forEach(function (taskList) {
+		let newTask = document.createElement("div");
+		newTask.className = "task-div";
 
-	if (configs.settings.showCheckBox) {
-		// <div class="checkbox"><input type="checkbox" /><label></label></div>
-		let checkbox = document.createElement("div");
-		checkbox.className = "checkbox";
+		if (configs.settings.showCheckBox) {
+			// <div class="checkbox"><input type="checkbox" /><label></label></div>
+			let checkbox = document.createElement("div");
+			checkbox.className = "checkbox";
 
-		let checkboxInput = document.createElement("input");
-		checkboxInput.type = "checkbox";
+			let checkboxInput = document.createElement("input");
+			checkboxInput.type = "checkbox";
 
-		// if completed is true, check the checkbox
-		if (completed) {
-			checkboxInput.checked = true;
+			// if completed is true, check the checkbox
+			if (completed) {
+				checkboxInput.checked = true;
+			}
+
+			checkbox.appendChild(checkboxInput);
+
+			let checkboxLabel = document.createElement("label");
+			checkbox.appendChild(checkboxLabel);
+
+			newTask.appendChild(checkbox);
+		} else {
+			let bulletPointDiv = document.createElement("div");
+
+			bulletPointDiv.className = "bullet-point";
+			bulletPointDiv.innerText = configs.styles.bulletPointCharacter;
+
+			newTask.appendChild(bulletPointDiv);
 		}
 
-		checkbox.appendChild(checkboxInput);
+		// <div class="username">username</div>
+		let usernameDiv = document.createElement("div");
+		usernameDiv.className = "username";
+		usernameDiv.innerText = username;
 
-		let checkboxLabel = document.createElement("label");
-		checkbox.appendChild(checkboxLabel);
-
-		newTask.appendChild(checkbox);
-	} else {
-		let bulletPointDiv = document.createElement("div");
-
-		bulletPointDiv.className = "bullet-point";
-		bulletPointDiv.innerText = configs.styles.bulletPointCharacter;
-
-		newTask.appendChild(bulletPointDiv);
-	}
-
-	// <div class="username">username</div>
-	let usernameDiv = document.createElement("div");
-	usernameDiv.className = "username";
-	usernameDiv.innerText = username;
-
-	if (configs.styles.usernameColor == "") {
-		usernameDiv.style.color = userColor;
-	}
-
-	newTask.appendChild(usernameDiv);
-
-	//  <div class="colon">:</div>
-	let colon = document.createElement("div");
-	colon.className = "colon";
-	colon.innerText = ":";
-	newTask.appendChild(colon);
-
-	// <div class="task">task</div>
-	let taskDiv = document.createElement("div");
-	taskDiv.className = "task";
-	taskDiv.innerText = task;
-
-	if (configs.settings.crossTasksOnDone) {
-		if (completed) {
-			taskDiv.classList.add("crossed");
+		if (configs.styles.usernameColor == "") {
+			usernameDiv.style.color = userColor;
 		}
-	}
 
-	newTask.appendChild(taskDiv);
+		newTask.appendChild(usernameDiv);
 
-	// append to task list
-	taskList.appendChild(newTask);
+		//  <div class="colon">:</div>
+		let colon = document.createElement("div");
+		colon.className = "colon";
+		colon.innerText = ":";
+		newTask.appendChild(colon);
+
+		// <div class="task">task</div>
+		let taskDiv = document.createElement("div");
+		taskDiv.className = "task";
+		taskDiv.innerText = task;
+
+		if (configs.settings.crossTasksOnDone) {
+			if (completed) {
+				taskDiv.classList.add("crossed");
+			}
+		}
+
+		newTask.appendChild(taskDiv);
+
+		// append to task list
+		taskList.appendChild(newTask);
+	});
 }
 
 // return true if pending, else false
@@ -264,7 +266,6 @@ function userHasTask(username) {
 
 // user adding task
 function addTask(username, userColor, task) {
-	incrementID(username, 1);
 	let tasks = getTasks();
 	let id = getID(username);
 
@@ -276,9 +277,9 @@ function addTask(username, userColor, task) {
 
 	saveTasks(tasks);
 
-	renderTaskList();
-
-	console.log(`@${username} Task added! `);
+	if (!scrolling) {
+		renderTaskList();
+	}
 }
 
 // user completing task
@@ -290,9 +291,13 @@ function doneTask(username) {
 
 	tasks[`${username}-${id}`].done = true;
 
+	incrementID(username, 1);
+
 	saveTasks(tasks);
 
-	renderTaskList();
+	if (!scrolling) {
+		renderTaskList();
+	}
 
 	return finishedTask;
 }
@@ -302,13 +307,24 @@ function removeTask(username) {
 	let id = getID(username);
 	let tasks = getTasks();
 
-	let removedTask = tasks[`${username}-${id}`].task;
+	let userTasks = tasks[`${username}-${id}`];
+	if (!userTasks) {
+		id = id - 1;
+		userTasks = tasks[`${username}-${id}`];
+		incrementID(username, -1);
+	}
+
+	let removedTask = userTasks.task;
 
 	delete tasks[`${username}-${id}`];
 
+	incrementID(username, -1);
+
 	saveTasks(tasks);
 
-	renderTaskList();
+	if (!scrolling) {
+		renderTaskList();
+	}
 
 	return removedTask;
 }
@@ -322,9 +338,17 @@ function editTask(username, task) {
 
 	saveTasks(tasks);
 
-	renderTaskList();
+	if (!scrolling) {
+		renderTaskList();
+	}
+}
 
-	console.log(`@${username} Task edited! `);
+// user finish task + add task
+function nextTask(username, userColor, task) {
+	let finishedTask = doneTask(username);
+	addTask(username, userColor, task);
+
+	return finishedTask;
 }
 
 // checks user last task
@@ -359,7 +383,6 @@ function adminDeleteTask(username) {
 	// get all tasks that has username as the keys and delete them
 	for (let task in tasks) {
 		if (task.split("-")[0] === username) {
-			console.log(task.split("-")[0]);
 			delete tasks[task];
 		}
 	}
@@ -371,8 +394,7 @@ function adminDeleteTask(username) {
 
 	saveTasks(tasks);
 	renderTaskList();
-
-	console.log(`@${username} Tasks deleted! `);
+	cancelAnimation();
 }
 
 // delete all completed tasks
@@ -387,9 +409,7 @@ function cleardone() {
 
 	saveTasks(tasks);
 	renderTaskList();
-	restartAnimation();
-
-	console.log(`Completed tasks deleted! `);
+	cancelAnimation();
 }
 
 // sleep function
@@ -397,65 +417,87 @@ function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// scroll left and right
+// scroll up and down
 async function animate() {
-	// task container height
-	let taskContainer = document.getElementsByClassName("task-container")[0];
+	// task container width
+	let taskContainer = document.querySelector(".task-container");
 	let taskContainerWidth = taskContainer.scrollWidth;
 
-	// task wrapper height
-	let taskWrapper = document.getElementsByClassName("task-wrapper")[0];
+	let taskWrapper = document.querySelector(".task-wrapper");
 	let taskWrapperWidth = taskWrapper.clientWidth;
 
-	// get vertical padding
-	let horizontalPaddingMargin =
-		parseInt(window.getComputedStyle(taskWrapper).paddingLeft) * 2 +
-		parseInt(window.getComputedStyle(taskWrapper).marginLeft) * 2;
+	// scroll task wrapper up and down once
+	if (taskContainerWidth > taskWrapperWidth && !scrolling) {
+		let secondaryElement = document.querySelector(".secondary");
+		secondaryElement.style.display = "flex";
 
-	let finalWidth =
-		taskContainerWidth - taskWrapperWidth + horizontalPaddingMargin;
+		let finalWidth =
+			taskContainerWidth + 10 + configs.styles.gapBetweenScrolls;
+		let duration = (finalWidth / configs.styles.pixelsPerSecond) * 1000;
 
-	let pixelsPerSecond = configs.styles.pixelsPerSecond;
-	let animationDelay = configs.styles.animationDelay;
+		// keyframes object in css scroll
+		let primaryKeyFrames = [
+			{ transform: `translateX(0)` },
+			{ transform: `translateX(-${finalWidth}px)` },
+		];
 
-	let duration = (finalWidth / pixelsPerSecond) * 1000;
+		let secondaryKeyFrames = [
+			{ transform: `translateX(${finalWidth}px)` },
+			{ transform: `translateX(0)` },
+		];
 
-	// keyframes object in css scroll
-	let keyframes = [
-		{ transform: `translateX(0px)` },
-		{ transform: `translateX(-${finalWidth}px)` },
-	];
-
-	// create a new animation object
-	let animation = document
-		.getElementsByClassName("task-container")[0]
-		.animate(keyframes, {
+		let options = {
 			duration: duration,
 			iterations: 1,
 			easing: "linear",
-		});
+		};
 
-	// play the animation
-	animation.play();
+		// create animation object and play it
+		primaryAnimation = document
+			.querySelector(".primary")
+			.animate(primaryKeyFrames, options);
 
-	// wait for animation to finish
-	await sleep(duration);
+		secondaryAnimation = document
+			.querySelector(".secondary")
+			.animate(secondaryKeyFrames, options);
 
-	// restart animation
+		primaryAnimation.play();
+		secondaryAnimation.play();
+
+		// wait for animation to finish
+		scrolling = true;
+
+		addAnimationListeners();
+	} else if (!scrolling) {
+		document.querySelector(".secondary").style.display = "none";
+
+		// cancel animations
+		cancelAnimation();
+	}
+}
+
+function addAnimationListeners() {
+	if (primaryAnimation) {
+		primaryAnimation.addEventListener("finish", animationFinished);
+		primaryAnimation.addEventListener("cancel", animationFinished);
+	}
+}
+
+function animationFinished() {
+	scrolling = false;
+	renderTaskList();
 	animate();
 }
 
-// cancel animation for restart (when clearing done, many tasks get cleared)
-function restartAnimation() {
-	// get animation object
-	let animation = document
-		.getElementsByClassName("task-container")[0]
-		.getAnimations()[0];
-
-	// cancel animation
-	animation.cancel();
-
-	animate();
+function cancelAnimation() {
+	console.log("Animation should be cancelled");
+	if (primaryAnimation) {
+		primaryAnimation.cancel();
+	}
+	if (secondaryAnimation) {
+		secondaryAnimation.cancel();
+	}
+	scrolling = false;
 }
 
 // tests
@@ -465,10 +507,13 @@ function oneLineTasks() {
 	}
 }
 
-function oneLineDoneTasks() {
-	for (let i = 1; i <= 10; i++) {
-		addTask(`ryans_impostor`, "#fff", "test task");
-		doneTask(`ryans_impostor`);
+async function oneLineDoneTasks() {
+	for (let i = 1; i <= 7; i++) {
+		addTask(`ryan_${i}`, "#fff", `test task ${i} never gonna give you up`);
+		// doneTask(`ryans_impostor`);
+		await sleep(1000);
+		doneTask(`ryan_${i}`);
+		await sleep(1000);
 	}
 }
 
@@ -477,17 +522,17 @@ function multiUserLineTasks() {
 		`cloudydayzzz`,
 		`berryspace`,
 		`MohFocus`,
-		// `xeno_hiraeth`,
-		// `euphie___`,
-		// `unknownnie`,
-		// `theyolotato`,
-		// `charliosaurus`,
-		// `jutstreams`,
-		// `mikewhatwhere`,
-		// `studypaws`,
-		// `pcc_lanezzz`,
-		// `workwithjandj`,
-		// `studylena`,
+		`xeno_hiraeth`,
+		`euphie___`,
+		`unknownnie`,
+		`theyolotato`,
+		`charliosaurus`,
+		`jutstreams`,
+		`mikewhatwhere`,
+		`studypaws`,
+		`pcc_lanezzz`,
+		`workwithjandj`,
+		`studylena`,
 	];
 
 	// loop through list of streamers
@@ -499,8 +544,8 @@ function multiUserLineTasks() {
 
 function tests() {
 	// oneLineTasks();
-	multiUserLineTasks();
-	// oneLineDoneTasks();
+	// multiUserLineTasks();
+	oneLineDoneTasks();
 }
 
 // hex to rgb that accepts 3 or 6 digits
@@ -534,16 +579,13 @@ function hexToRgb(hex) {
 	return `${r}, ${g}, ${b}`;
 }
 
+let currentTitle = 0;
 // interval the task title
 setInterval(async () => {
 	let taskTitle = document.getElementById("title");
-	let taskTitleText = taskTitle.innerText;
 
 	// cycle through a list of titles
-	let titles = ["!ryanpython", "!taskadd", "!taskdone", "!taskhelp"];
-
-	// get current title
-	let currentTitle = titles.indexOf(taskTitleText);
+	const titles = configs.titles;
 
 	// if current title is the last title, set it to the first title
 	if (currentTitle === titles.length - 1) {
@@ -566,11 +608,12 @@ setInterval(async () => {
 }, 8000);
 
 // on window load
-window.onload = function () {
+window.onload = async function () {
 	importStyles();
 	// resetDB();
 	setupDB();
 	renderTaskList();
 	// tests();
+	await sleep(1000);
 	animate();
 };

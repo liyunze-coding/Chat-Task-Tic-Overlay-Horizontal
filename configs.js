@@ -14,9 +14,10 @@ const configs = (function () {
 	// scroll
 	const pixelsPerSecond = 50; // must be a number
 	const animationDelay = 5; // must be a number (seconds)
+	const gapBetweenScrolls = 10; // must be a number
 
 	// task list
-	const taskListWidth = "780px"; // must have px at the end
+	const taskListWidth = "690px"; // must have px at the end
 	const taskListHeight = "70px"; // must have px at the end
 
 	const taskListPadding = "0px"; // must have px at the end
@@ -29,7 +30,7 @@ const configs = (function () {
 	const taskListBorderRadius = "10px"; // must have px at the end
 
 	// header
-	const headerWidth = "500px"; // must have px at the end
+	const headerWidth = "480px"; // must have px at the end
 	const headerHeight = "70px"; // must have px at the end
 	const headerBackgroundColor = "#000"; // hex only
 	const headerBackgroundOpacity = 0.9; // must be between 0 and 1
@@ -72,8 +73,6 @@ const configs = (function () {
 	const taskMarginRight = "10px"; // must have px at the end
 	const taskPadding = "0px"; // must have px at the end
 
-	const taskMaxWidth = "500px"; // must have px at the end
-
 	// checkbox - if enabled
 	const checkBoxSize = "20px"; // must have px at the end
 	const checkBoxBackgroundColor = "#000"; // hex only
@@ -83,14 +82,14 @@ const configs = (function () {
 	const checkBoxBorderWidth = "1px"; // must have px at the end
 	const checkBoxBorderRadius = "3px"; // must have px at the end
 
-	const checkBoxMarginTop = "6px"; // must have px at the end
+	const checkBoxMarginTop = "2px"; // must have px at the end
 	const checkBoxMarginLeft = "2px"; // must have px at the end
 	const checkBoxMarginRight = "2px"; // must have px at the end
 
 	const tickCharacter = "'✔'"; // any character, must be in single quotes
 	const tickSize = "18px"; // must have px at the end
 	const tickColor = "white"; // hex or name
-	const tickTranslateY = "4px"; // must have px at the end
+	const tickTranslateY = "3px"; // must have px at the end
 
 	// bullet point - if enabled
 	const bulletPointCharacter = "•"; // any character
@@ -223,12 +222,15 @@ const configs = (function () {
 			"{user} RyanPython is the creator of this bot, check out his Twitch at https://www.twitch.tv/ryanpython",
 	};
 
+	const titles = ["!ryanpython", "!taskadd", "!taskdone", "!taskhelp"];
+
 	// Other
 	const styles = {
 		headerFontFamily,
 		bodyFontFamily,
 		pixelsPerSecond,
 		animationDelay,
+		gapBetweenScrolls,
 		taskListWidth,
 		taskListHeight,
 		taskListPadding,
@@ -266,7 +268,6 @@ const configs = (function () {
 		taskBorderWidth,
 		taskMarginRight,
 		taskPadding,
-		taskMaxWidth,
 		checkBoxSize,
 		checkBoxBorderColor,
 		checkBoxBorderRadius,
@@ -334,6 +335,7 @@ const configs = (function () {
 		commands,
 		responses,
 		settings,
+		titles,
 	};
 
 	return module;
