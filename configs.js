@@ -154,6 +154,9 @@ const configs = (function () {
 		"!finished",
 	];
 
+	// Next task commands - please add commands in the exact format
+	const nextTaskCommands = ["!next", "!nexttask"];
+
 	// Check task commands - please add commands in the exact format
 	const checkCommands = [
 		"!taskc",
@@ -296,6 +299,7 @@ const configs = (function () {
 		deleteTaskCommands,
 		editTaskCommands,
 		finishTaskCommands,
+		nextTaskCommands,
 		helpCommands,
 		checkCommands,
 		adminDeleteCommands,
