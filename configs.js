@@ -204,6 +204,8 @@ const configs = (function () {
 	// Responses
 	const taskAdded = 'The task "{task}" has been added, {user}!';
 	const noTaskAdded =
+		"Good job on finishing the task '{oldTask}'! Now moving onto '{newTask}', {user}!";
+	const taskNext =
 		"Looks like you already have a task up there {user}, use !check to check your last task!";
 	const noTaskContent = "Try using !add the-task-you-are-working-on {user}";
 	const noTaskToEdit = "No task to edit {user}";
@@ -221,11 +223,11 @@ const configs = (function () {
 	const help = `{user} Use the following commands to help you out - !task !remove !edit !done. For more commands, click here: https://github.com/liyunze-coding/Chat-Task-Tic-Overlay#commands`;
 
 	const additionalCommands = {
-		"!ryanpython":
-			"{user} RyanPython is the creator of this bot, check out his Twitch at https://www.twitch.tv/ryanpython",
+		"!rythondev":
+			"{user} Ryan is the creator of this bot, check out his Twitch at https://www.twitch.tv/rythondev",
 	};
 
-	const titles = ["!ryanpython", "!taskadd", "!taskdone", "!taskhelp"];
+	const titles = ["!RythonDev", "!taskadd", "!taskdone", "!taskhelp"];
 
 	// Other
 	const styles = {
@@ -310,6 +312,7 @@ const configs = (function () {
 
 	const responses = {
 		taskAdded,
+		taskNext,
 		noTaskAdded,
 		noTaskContent,
 		taskDeleted,
